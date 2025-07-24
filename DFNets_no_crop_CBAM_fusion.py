@@ -17,7 +17,7 @@ from pathlib import Path
 from tensorflow.keras import layers
 
 import random
-# import tensorflow as tf
+import tensorflow as tf
 
 SEED = 42
 # os.environ['PYTHONHASHSEED'] = str(SEED)
@@ -129,92 +129,95 @@ dev_ds_oulu = dev_ds_oulu.shuffle(32).batch(batch_size).prefetch(AUTOTUNE)
 test_ds_oulu = tf.data.Dataset.from_generator(VideoFramesDataset(test_dir, test_annotation), output_signature = output_signature)
 test_ds_oulu = test_ds_oulu.batch(batch_size).prefetch(AUTOTUNE)
 
-class VideoFramesDatasetMSU:
-    def __init__(self, root_dir, annotation_file, transform=False):
-        self.root_dir = root_dir
-        self.transform = transform
-        #self._parse_annotationfile()
 
-        self.video_list = annotation_file[0]
-        self.label = annotation_file[1]
-
-    def __len__(self):
-        return len(self.video_list)
-
-    def on_epoch_end(self):
-        pass
-
-    def  __call__(self):
-        for idx in range(len(self.video_list)):
-            frame = np.load(os.path.join(self.root_dir, self.video_list[idx]))
-            #frame = (frame-frame.mean())/frame.std()
-            frame = np.transpose(frame, axes=[0, 2, 3, 1])
-            if self.label[idx] == 0:
-                label = tf.convert_to_tensor(0)
-            else:
-                label = tf.convert_to_tensor(1)
-
-            label = tf.convert_to_tensor([label])
-
-            yield tf.convert_to_tensor(frame), label
-
-test_dir_msu = path+"/MSU-MFSD/MSU-MFSD-Publish.zip/scene01/output/"
-#test_dir_msu = "./Limited Source/O to I and M/Test MSU-MFSD/Step 2/"
-
-test_annotation_msu = pd.read_csv(path+"/MSU-MFSD/MSU-MFSD-Publish.zip/scene01/output/annotation.txt", sep = ',', header=None)
-selection = pd.read_csv(path+"/MSU-MFSD/MSU-MFSD-Publish.zip/test_sub_list.txt", header=None).values[:,0].astype("str").tolist()
-selection = ['0' + s if len(s)>1 else '00'+s for s in selection]
-test_annotation_msu = test_annotation_msu[test_annotation_msu.iloc[:,[0]].squeeze().str.contains('|'.join(selection))].reset_index().iloc[:,1:]
-
-output_signature = (
-    tf.TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32),  # video frame sequence
-    tf.TensorSpec(shape=(1,), dtype=tf.int32)                    # batch of 1 label
-    )
-
-val_ds_msu = tf.data.Dataset.from_generator(VideoFramesDatasetMSU(test_dir_msu, test_annotation_msu), output_signature = output_signature)
-val_ds_msu = val_ds_msu.batch(batch_size).prefetch(AUTOTUNE)
-
-class VideoFramesDatasetIdiap:
-    def __init__(self, root_dir, annotation_file):
-        self.root_dir = root_dir
-        #self._parse_annotationfile()
-
-        self.video_list = annotation_file[0]
-        self.label = annotation_file[1]
-
-    def __len__(self):
-        return len(self.video_list)
-
-    def on_epoch_end(self):
-        pass
-
-    def  __call__(self):
-        for idx in range(len(self.video_list)):
-            frame = np.load(os.path.join(self.root_dir, self.video_list[idx]))
-            frame = np.transpose(frame, axes=[0, 2, 3, 1])
-            # frame = exposure.adjust_gamma(frame, 0.5)
-            if self.label[idx] == 0:
-                label = tf.convert_to_tensor(0)
-            else:
-                label = tf.convert_to_tensor(1)
-
-            label = tf.convert_to_tensor([label])
-
-            yield tf.convert_to_tensor(frame), label
-
-test_dir_idiap = path+"/Idiap/replayattack-test.tar.gz/test/output/"
-#test_dir_idiap = path+"/Limited Source/O to I and M/Test Idiap/Step 4/"
-test_annotation_idiap = pd.read_csv(path+"/Idiap/replayattack-test.tar.gz/test/output/annotation.txt", sep = ',', header=None)
-
-train_dir_idiap = path+"/Idiap/replayattack-train.tar.gz/train/output/"
-train_annotation_idiap = pd.read_csv(train_dir_idiap+"/annotation.txt", sep = ',', header=None)
-
-train_ds_idiap = tf.data.Dataset.from_generator(VideoFramesDatasetIdiap(train_dir_idiap, train_annotation_idiap), output_signature = output_signature)
-train_ds_idiap = train_ds_idiap.batch(batch_size)
-train_ds_idiap = train_ds_idiap.prefetch(AUTOTUNE)
-
-val_ds_idiap = tf.data.Dataset.from_generator(VideoFramesDatasetIdiap(test_dir_idiap, test_annotation_idiap), output_signature = output_signature)
-val_ds_idiap = val_ds_idiap.batch(batch_size).prefetch(AUTOTUNE)
+# ===================== NON-OULU DATASET CODE (COMMENTED OUT) =====================
+# class VideoFramesDatasetMSU:
+#     def __init__(self, root_dir, annotation_file, transform=False):
+#         self.root_dir = root_dir
+#         self.transform = transform
+#         #self._parse_annotationfile()
+#
+#         self.video_list = annotation_file[0]
+#         self.label = annotation_file[1]
+#
+#     def __len__(self):
+#         return len(self.video_list)
+#
+#     def on_epoch_end(self):
+#         pass
+#
+#     def  __call__(self):
+#         for idx in range(len(self.video_list)):
+#             frame = np.load(os.path.join(self.root_dir, self.video_list[idx]))
+#             #frame = (frame-frame.mean())/frame.std()
+#             frame = np.transpose(frame, axes=[0, 2, 3, 1])
+#             if self.label[idx] == 0:
+#                 label = tf.convert_to_tensor(0)
+#             else:
+#                 label = tf.convert_to_tensor(1)
+#
+#             label = tf.convert_to_tensor([label])
+#
+#             yield tf.convert_to_tensor(frame), label
+#
+# test_dir_msu = path+"/MSU-MFSD/MSU-MFSD-Publish.zip/scene01/output/"
+# #test_dir_msu = "./Limited Source/O to I and M/Test MSU-MFSD/Step 2/"
+#
+# test_annotation_msu = pd.read_csv(path+"/MSU-MFSD/MSU-MFSD-Publish.zip/scene01/output/annotation.txt", sep = ',', header=None)
+# selection = pd.read_csv(path+"/MSU-MFSD/MSU-MFSD-Publish.zip/test_sub_list.txt", header=None).values[:,0].astype("str").tolist()
+# selection = ['0' + s if len(s)>1 else '00'+s for s in selection]
+# test_annotation_msu = test_annotation_msu[test_annotation_msu.iloc[:,[0]].squeeze().str.contains('|'.join(selection))].reset_index().iloc[:,1:]
+#
+# output_signature = (
+#     tf.TensorSpec(shape=(None, 224, 224, 3), dtype=tf.float32),  # video frame sequence
+#     tf.TensorSpec(shape=(1,), dtype=tf.int32)                    # batch of 1 label
+#     )
+#
+# val_ds_msu = tf.data.Dataset.from_generator(VideoFramesDatasetMSU(test_dir_msu, test_annotation_msu), output_signature = output_signature)
+# val_ds_msu = val_ds_msu.batch(batch_size).prefetch(AUTOTUNE)
+#
+# class VideoFramesDatasetIdiap:
+#     def __init__(self, root_dir, annotation_file):
+#         self.root_dir = root_dir
+#         #self._parse_annotationfile()
+#
+#         self.video_list = annotation_file[0]
+#         self.label = annotation_file[1]
+#
+#     def __len__(self):
+#         return len(self.video_list)
+#
+#     def on_epoch_end(self):
+#         pass
+#
+#     def  __call__(self):
+#         for idx in range(len(self.video_list)):
+#             frame = np.load(os.path.join(self.root_dir, self.video_list[idx]))
+#             frame = np.transpose(frame, axes=[0, 2, 3, 1])
+#             # frame = exposure.adjust_gamma(frame, 0.5)
+#             if self.label[idx] == 0:
+#                 label = tf.convert_to_tensor(0)
+#             else:
+#                 label = tf.convert_to_tensor(1)
+#
+#             label = tf.convert_to_tensor([label])
+#
+#             yield tf.convert_to_tensor(frame), label
+#
+# test_dir_idiap = path+"/Idiap/replayattack-test.tar.gz/test/output/"
+# #test_dir_idiap = path+"/Limited Source/O to I and M/Test Idiap/Step 4/"
+# test_annotation_idiap = pd.read_csv(path+"/Idiap/replayattack-test.tar.gz/test/output/annotation.txt", sep = ',', header=None)
+#
+# train_dir_idiap = path+"/Idiap/replayattack-train.tar.gz/train/output/"
+# train_annotation_idiap = pd.read_csv(train_dir_idiap+"/annotation.txt", sep = ',', header=None)
+#
+# train_ds_idiap = tf.data.Dataset.from_generator(VideoFramesDatasetIdiap(train_dir_idiap, train_annotation_idiap), output_signature = output_signature)
+# train_ds_idiap = train_ds_idiap.batch(batch_size)
+# train_ds_idiap = train_ds_idiap.prefetch(AUTOTUNE)
+#
+# val_ds_idiap = tf.data.Dataset.from_generator(VideoFramesDatasetIdiap(test_dir_idiap, test_annotation_idiap), output_signature = output_signature)
+# val_ds_idiap = val_ds_idiap.batch(batch_size).prefetch(AUTOTUNE)
+# ===================== END NON-OULU DATASET CODE =====================
 
 class SpatialAttentionModule(layers.Layer):
     def __init__(self, **kwargs):
@@ -571,7 +574,6 @@ model.save_weights("dfnet_best_model_contrastive protocol_1_no_crop_fusion_3.wei
 # model.load_weights("dfnet_best_model_contrastive_protocol_3_f.weights.h5")
 
 from sklearn.metrics import roc_curve, roc_auc_score
-import pylab as pl
 from sklearn.metrics import auc
 
 y_pred_keras,_,_ = model.predict(test_ds_oulu)

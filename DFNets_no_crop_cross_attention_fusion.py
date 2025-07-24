@@ -273,7 +273,6 @@ if __name__ == "__main__":
 model.save_weights('DFNets_no_crop_fusion_60.weights.h5')
 
 from sklearn.metrics import roc_curve, roc_auc_score
-import pylab as pl
 from sklearn.metrics import auc
 
 _,_,y_pred_keras = model.predict(test_ds_oulu)
